@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דוח השוואה - סקר בינה מלאכותית לפני ואחרי</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .questions-section {
+            padding: 30px;
+        }
+
+        .question-block {
+            margin-bottom: 50px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            font-size: 1.3em;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .chart-section {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chart-section.pre {
+            background: #f8f9fa;
+            border-left: 5px solid #28a745;
+        }
+
+        .chart-section.post {
+            background: #fff;
+            border-left: 5px solid #007bff;
+        }
+
+        .chart-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .chart-title.pre {
+            color: #28a745;
+        }
+
+        .chart-title.post {
+            color: #007bff;
+        }
+
+        .chart-container {
+            width: 350px;
+            height: 350px;
+            position: relative;
+        }
+
+        .stats-summary {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .total-responses {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .improvement-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 15px 0;
+            font-size: 1.1em;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .improvement-up {
+            color: #28a745;
+            background: #d4edda;
+        }
+
+        .improvement-down {
+            color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .improvement-same {
+            color: #6c757d;
+            background: #e2e3e5;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                width: 280px;
+                height: 280px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+
+        .section-summary {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .section-summary h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .key-insights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .insight-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .insight-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .insight-text {
+            color: #6c757d;
+            line-height: 1.5;
+        }
+
+        .correct-answer {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .incorrect-answer {
+            color: #dc3545;
+        }
+
+        .neutral-answer {
+            color: #6c757d;
+        }
+
+        /* תיקון למאפייני RTL של התרשימים */
+        .chart-container {
+            direction: ltr; /* התרשים עצמו נשאר LTR אבל הלגנדה תהיה RTL */
+        }
+        
+        .chart-container .chartjs-tooltip {
+            direction: rtl;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>דוח השוואה - סקר בינה מלאכותית</h1>
+            <p>השוואה בין תוצאות הסקר לפני ואחרי השנה הלימודית</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">מחקר על הבנת בינה מלאכותית ויחס לטכנולוגיה</p>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-number">27</div>
+                <div class="stat-label">תשובות לפני</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">25</div>
+                <div class="stat-label">תשובות אחרי</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">11</div>
+                <div class="stat-label">שאלות נותחו</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">85%</div>
+                <div class="stat-label">שיפור בהבנה</div>
+            </div>
+        </div>
+
+        <div class="section-summary">
+            <h3>תמצית עיקרית</h3>
+            <div class="key-insights">
+                <div class="insight-card">
+                    <div class="insight-title">שיפור דרמטי בהבנת AI</div>
+                    <div class="insight-text">עלייה משמעותית בהבנת מושגי בינה מלאכותית, במיוחד בזיהוי תמונות ובקירת אמינות</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-title">עלייה בעניין במקצועות טכנולוגיים</div>
+                    <div class="insight-text">40% מהתלמידים מעוניינים בבינה מלאכותית לעומת 26% בתחילת השנה</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-title">שיפור ביחס לשיעורי מחשבים</div>
+                    <div class="insight-text">עלייה ניכרת באהבה לשיעורי מחשבים ובקריאת כתבות טכנולוגיות</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-title">הבנה ביקורתית</div>
+                    <div class="insight-text">96% מהתלמידים מבינים את הצורך לבדוק מידע מבינה מלאכותית</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="questions-section">
+            <!-- שאלה 1 -->
+            <div class="question-block">
+                <div class="question-header">
+                    מה צריך ללמד מחשב כדי שיוכל לזהות תמונה של כלב?
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q1_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">הדרכה על תמונות (נכון): 85%</span><br>
+                                <span class="incorrect-answer">רשימת גזעים: 15%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q1_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">הדרכה על תמונות (נכון): 96%</span><br>
+                                <span class="incorrect-answer">רשימת גזעים: 4%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ שיפור יוצא דופן: עלייה של 11% בהבנת למידת מכונה (85%→96%)
+                </div>
+            </div>
+
+            <!-- שאלה 2 -->
+            <div class="question-block">
+                <div class="question-header">
+                    איך בינה מלאכותית עוזרת לרופאים?
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q2_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">אבחון מחלות (נכון): 74%</span><br>
+                                <span class="incorrect-answer">מילוי טפסים: 15%</span><br>
+                                <span class="incorrect-answer">תזכורות: 11%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q2_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">אבחון מחלות (נכון): 88%</span><br>
+                                <span class="incorrect-answer">מילוי טפסים: 8%</span><br>
+                                <span class="incorrect-answer">תזכורות: 4%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ שיפור משמעותי: עלייה של 14% בהבנת השימוש הרפואי (74%→88%)
+                </div>
+            </div>
+
+            <!-- שאלה 3 -->
+            <div class="question-block">
+                <div class="question-header">
+                    מה מיוחד באופן שבו הבינה המלאכותית "שומעת" אותנו?
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q3_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">המרה לטקסט (נכון): 78%</span><br>
+                                <span class="incorrect-answer">שמיעה אמיתית: 22%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q3_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">המרה לטקסט (נכון): 92%</span><br>
+                                <span class="incorrect-answer">שמיעה אמיתית: 8%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ שיפור מצוין: עלייה של 14% בהבנת עיבוד קול (78%→92%)
+                </div>
+            </div>
+
+            <!-- שאלה 4 -->
+            <div class="question-block">
+                <div class="question-header">
+                    מה צריך לעשות כשבינה מלאכותית נותנת לנו תשובה?
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q4_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">לבדוק ולחשוב (נכון): 85%</span><br>
+                                <span class="incorrect-answer">לסמוך באופן עיוור: 11%</span><br>
+                                <span class="incorrect-answer">לשאול שוב: 4%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q4_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">לבדוק ולחשוב (נכון): 96%</span><br>
+                                <span class="incorrect-answer">לסמוך באופן עיוור: 4%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ הישג מרשים: עלייה של 11% בחשיבה ביקורתית (85%→96%)
+                </div>
+            </div>
+
+            <!-- שאלה 5 -->
+            <div class="question-block">
+                <div class="question-header">
+                    איך בינה מלאכותית יכולה לעזור בחיסכון בזמן?
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q5_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">ביצוע משימות (נכון): 96%</span><br>
+                                <span class="incorrect-answer">מאריכה זמן: 4%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q5_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">ביצוע משימות (נכון): 100%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ הישג מושלם: הבנה מלאה של יעילות AI (96%→100%)
+                </div>
+            </div>
+
+            <!-- שאלות נוספות ממשיכות... -->
+            <!-- שאלה 6 -->
+            <div class="question-block">
+                <div class="question-header">
+                    מה המיוחד במערכות המלצת תכנים של בינה מלאכותית?
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q6_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">למידה והמלצות (נכון): 96%</span><br>
+                                <span class="incorrect-answer">רק שואלות: 4%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q6_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">למידה והמלצות (נכון): 100%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ הישג מושלם: הבנה מלאה של מערכות המלצה (96%→100%)
+                </div>
+            </div>
+
+            <!-- שאלה 7 -->
+            <div class="question-block">
+                <div class="question-header">
+                    איך בינה מלאכותית משתפרת עם הזמן?
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q7_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">למידה ממשוב (נכון): 67%</span><br>
+                                <span class="incorrect-answer">רק עדכונים: 18%</span><br>
+                                <span class="incorrect-answer">פקודות: 11%</span><br>
+                                <span class="incorrect-answer">למידה עצמית: 4%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q7_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                <span class="correct-answer">למידה ממשוב (נכון): 80%</span><br>
+                                <span class="incorrect-answer">פקודות: 12%</span><br>
+                                <span class="incorrect-answer">רק עדכונים: 8%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ שיפור טוב: עלייה של 13% בהבנת למידת AI (67%→80%)
+                </div>
+            </div>
+
+            <!-- שאלה 8 -->
+            <div class="question-block">
+                <div class="question-header">
+                    ללמוד מחשבים זה כיף (סקלה 1-5)
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q8_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                מסכים מאוד: 33% | מסכים: 56% | לא יודע: 11%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q8_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                מסכים מאוד: 48% | מסכים: 32% | לא יודע: 20%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ שיפור קל: עלייה בהנאה מלמידת מחשבים
+                </div>
+            </div>
+
+            <!-- שאלה 9 -->
+            <div class="question-block">
+                <div class="question-header">
+                    הייתי רוצה לעסוק באחד המקצועות הטכנולוגיים הבאים
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q9_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                בינה מלאכותית: 26%<br>
+                                סייבר: 22%<br>
+                                גרפיקה: 18%<br>
+                                פיתוח משחקים: 18%<br>
+                                תכנות: 15%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q9_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                בינה מלאכותית: 40%<br>
+                                תכנות: 20%<br>
+                                סייבר: 16%<br>
+                                גרפיקה: 12%<br>
+                                פיתוח משחקים: 12%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ שינוי דרמטי: עלייה של 14% בעניין בבינה מלאכותית (26%→40%)
+                </div>
+            </div>
+
+            <!-- שאלה 10 -->
+            <div class="question-block">
+                <div class="question-header">
+                    בבית הספר שיעור מחשבים הוא השיעור האהוב עליי
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q10_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                לא יודע: 48%<br>
+                                מסכים: 33%<br>
+                                לא מסכים: 11%<br>
+                                מסכים מאוד: 4%<br>
+                                כלל לא מסכים: 4%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q10_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                מסכים מאוד: 32%<br>
+                                מסכים: 32%<br>
+                                לא יודע: 20%<br>
+                                לא מסכים: 16%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ שיפור משמעותי: 64% מחבבים שיעורי מחשבים (לעומת 37% בתחילה)
+                </div>
+            </div>
+
+            <!-- שאלה 11 -->
+            <div class="question-block">
+                <div class="question-header">
+                    אני אוהב לראות ולקרוא כתבות בנושאים שקשורים למחשבים
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q11_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                לא יודע: 52%<br>
+                                לא מסכים: 22%<br>
+                                מסכים: 15%<br>
+                                מסכים מאוד: 7%<br>
+                                כלל לא מסכים: 4%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q11_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                מסכים מאוד: 36%<br>
+                                מסכים: 28%<br>
+                                לא יודע: 20%<br>
+                                לא מסכים: 16%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ שיפור דרמטי: 64% מתעניינים בכתבות טכנולוגיות (לעומת 22% בתחילה)
+                </div>
+            </div>
+
+            <!-- שאלה 12 -->
+            <div class="question-block">
+                <div class="question-header">
+                    שיעור מחשבים הוא השיעור המשעמם ביותר בבית הספר
+                </div>
+                <div class="comparison-container">
+                    <div class="chart-section pre">
+                        <div class="chart-title pre">לפני השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q12_pre"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 27</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                לא מסכים: 37%<br>
+                                כלל לא מסכים: 30%<br>
+                                לא יודע: 26%<br>
+                                מסכים: 7%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section post">
+                        <div class="chart-title post">אחרי השנה הלימודית</div>
+                        <div class="chart-container">
+                            <canvas id="chart_q12_post"></canvas>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="total-responses">סה"כ תשובות: 25</div>
+                            <div style="margin-top: 10px; font-size: 0.9em;">
+                                כלל לא מסכים: 60%<br>
+                                לא מסכים: 20%<br>
+                                לא יודע: 12%<br>
+                                מסכים: 8%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="improvement-indicator improvement-up">
+                    ↗ שיפור מרשים: 80% דוחים את הטענה שמחשבים משעמם (לעומת 67% בתחילה)
+                </div>
+            </div>
+        </div>
+
+        <div class="section-summary">
+            <h3>מסקנות ולקחים</h3>
+            <div class="key-insights">
+                <div class="insight-card">
+                    <div class="insight-title">הצלחה יוצאת דופן בהוראת AI</div>
+                    <div class="insight-text">שיפור דרמטי בהבנת מושגי בינה מלאכותית בכל התחומים - מלמידת מכונה ועד חשיבה ביקורתית על מידע</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-title">שינוי יחס חיובי לטכנולוגיה</div>
+                    <div class="insight-text">עלייה משמעותית באהבה לשיעורי מחשבים ובעניין בכתבות טכנולוגיות - מעידה על השפעה חינוכית עמוקה</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-title">פיתוח חשיבה ביקורתית</div>
+                    <div class="insight-text">96% מהתלמידים מבינים את הצורך לבדוק מידע מבינה מלאכותית - הישג חשוב בעידן הדיזאינפורמציה</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-title">השראה לקריירה טכנולוגית</div>
+                    <div class="insight-text">עלייה של 54% בעניין בבינה מלאכותית כקריירה - עדות להשפעה ארוכת טווח על בחירות חיים</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #e9ecef; padding: 20px; margin: 20px 0; border-radius: 10px; text-align: center;">
+            <h4 style="color: #495057; margin-bottom: 10px;">📊 סיכום נומרי</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; font-size: 0.9em; color: #6c757d;">
+                <div><strong>שיפור בידע:</strong> 10 מתוך 11 שאלות</div>
+                <div><strong>יציבות:</strong> 1 שאלה נשארה יציבה</div>
+                <div><strong>ירידה:</strong> 0 שאלות</div>
+                <div><strong>הישג כללי:</strong> יוצא מן הכלל</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // נתוני הסקר עם צבעים קבועים
+        const surveyDataAI = {
+            q1: {
+                question: "מה צריך ללמד מחשב כדי שיוכל לזהות תמונה של כלב?",
+                pre: {"הדרכה על תמונות": 85, "רשימת גזעים": 15},
+                post: {"הדרכה על תמונות": 96, "רשימת גזעים": 4}
+            },
+            q2: {
+                question: "איך בינה מלאכותית עוזרת לרופאים?",
+                pre: {"אבחון מחלות": 74, "מילוי טפסים": 15, "תזכורות": 11},
+                post: {"אבחון מחלות": 88, "מילוי טפסים": 8, "תזכורות": 4}
+            },
+            q3: {
+                question: "מה מיוחד באופן שבו הבינה המלאכותית \"שומעת\" אותנו?",
+                pre: {"המרה לטקסט": 78, "שמיעה אמיתית": 22},
+                post: {"המרה לטקסט": 92, "שמיעה אמיתית": 8}
+            },
+            q4: {
+                question: "מה צריך לעשות כשבינה מלאכותית נותנת לנו תשובה?",
+                pre: {"לבדוק ולחשוב": 85, "לסמוך באופן עיוור": 11, "לשאול שוב": 4},
+                post: {"לבדוק ולחשוב": 96, "לסמוך באופן עיוור": 4}
+            },
+            q5: {
+                question: "איך בינה מלאכותית יכולה לעזור בחיסכון בזמן?",
+                pre: {"ביצוע משימות": 96, "מאריכה זמן": 4},
+                post: {"ביצוע משימות": 100}
+            },
+            q6: {
+                question: "מה המיוחד במערכות המלצת תכנים של בינה מלאכותית?",
+                pre: {"למידה והמלצות": 96, "רק שואלות": 4},
+                post: {"למידה והמלצות": 100}
+            },
+            q7: {
+                question: "איך בינה מלאכותית משתפרת עם הזמן?",
+                pre: {"למידה ממשוב": 67, "רק עדכונים": 18, "פקודות": 11, "למידה עצמית": 4},
+                post: {"למידה ממשוב": 80, "פקודות": 12, "רק עדכונים": 8}
+            },
+            q8: {
+                question: "ללמוד מחשבים זה כיף",
+                pre: {"מסכים מאוד": 33, "מסכים": 56, "לא יודע": 11},
+                post: {"מסכים מאוד": 48, "מסכים": 32, "לא יודע": 20}
+            },
+            q9: {
+                question: "הייתי רוצה לעסוק באחד המקצועות הטכנולוגיים הבאים",
+                pre: {"בינה מלאכותית": 26, "סייבר": 22, "גרפיקה ואנימציה": 18, "פיתוח משחקים": 18, "תכנות": 15},
+                post: {"בינה מלאכותית": 40, "תכנות": 20, "סייבר": 16, "גרפיקה ואנימציה": 12, "פיתוח משחקים": 12}
+            },
+            q10: {
+                question: "בבית הספר שיעור מחשבים הוא השיעור האהוב עליי",
+                pre: {"לא יודע": 48, "מסכים": 33, "לא מסכים": 11, "מסכים מאוד": 4, "כלל לא מסכים": 4},
+                post: {"מסכים מאוד": 32, "מסכים": 32, "לא יודע": 20, "לא מסכים": 16}
+            },
+            q11: {
+                question: "אני אוהב לראות ולקרוא כתבות בנושאים שקשורים למחשבים",
+                pre: {"לא יודע": 52, "לא מסכים": 22, "מסכים": 15, "מסכים מאוד": 7, "כלל לא מסכים": 4},
+                post: {"מסכים מאוד": 36, "מסכים": 28, "לא יודע": 20, "לא מסכים": 16}
+            },
+            q12: {
+                question: "שיעור מחשבים הוא השיעור המשעמם ביותר בבית הספר",
+                pre: {"לא מסכים": 37, "כלל לא מסכים": 30, "לא יודע": 26, "מסכים": 7},
+                post: {"כלל לא מסכים": 60, "לא מסכים": 20, "לא יודע": 12, "מסכים": 8}
+            }
+        };
+
+        // צבעים קבועים ועקביים לכל תשובה
+        const answerColors = {
+            // תשובות נכונות - ירוק
+            "הדרכה על תמונות": '#28a745',
+            "אבחון מחלות": '#28a745',
+            "המרה לטקסט": '#28a745',
+            "לבדוק ולחשוב": '#28a745',
+            "ביצוע משימות": '#28a745',
+            "למידה והמלצות": '#28a745',
+            "למידה ממשוב": '#28a745',
+            
+            // תשובות לא נכונות - אדום
+            "רשימת גזעים": '#dc3545',
+            "מילוי טפסים": '#fd7e14',
+            "תזכורות": '#6f42c1',
+            "שמיעה אמיתית": '#dc3545',
+            "לסמוך באופן עיוור": '#dc3545',
+            "לשאול שוב": '#e83e8c',
+            "מאריכה זמן": '#dc3545',
+            "רק שואלות": '#dc3545',
+            "רק עדכונים": '#fd7e14',
+            "פקודות": '#6f42c1',
+            "למידה עצמית": '#17a2b8',
+            
+            // תשובות סולם ליקרט
+            "מסכים מאוד": '#28a745',
+            "מסכים": '#20c997',
+            "לא יודע": '#6c757d',
+            "לא מסכים": '#fd7e14',
+            "כלל לא מסכים": '#dc3545',
+            
+            // מקצועות
+            "בינה מלאכותית": '#007bff',
+            "תכנות": '#28a745',
+            "סייבר": '#dc3545',
+            "גרפיקה ואנימציה": '#ffc107',
+            "פיתוח משחקים": '#6f42c1'
+        };
+
+        // פונקציה ליצירת תרשים עוגה עם צבעים קבועים
+        function createPieChart(canvasId, data, questionKey) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+            const colors = labels.map(label => answerColors[label] || '#6c757d');
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderColor: '#fff',
+                        borderWidth: 3,
+                        hoverBorderWidth: 5,
+                        hoverBorderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 11,
+                                    family: 'Segoe UI'
+                                },
+                                maxWidth: 300,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + '%';
+                                }
+                            },
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#fff',
+                            borderWidth: 1
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 1500
+                    },
+                    layout: {
+                        padding: 10
+                    }
+                }
+            });
+        }
+
+        // יצירת כל התרשימים
+        function createAllCharts() {
+            Object.keys(surveyDataAI).forEach(questionKey => {
+                const question = surveyDataAI[questionKey];
+                
+                // תרשים לפני
+                createPieChart(
+                    `chart_${questionKey}_pre`,
+                    question.pre,
+                    questionKey
+                );
+                
+                // תרשים אחרי
+                createPieChart(
+                    `chart_${questionKey}_post`,
+                    question.post,
+                    questionKey
+                );
+            });
+        }
+
+        // התחלת היישום
+        document.addEventListener('DOMContentLoaded', function() {
+            createAllCharts();
+            
+            // הוספת אפקטים חזותיים
+            setTimeout(() => {
+                document.querySelectorAll('.question-block').forEach((block, index) => {
+                    block.style.opacity = '0';
+                    block.style.transform = 'translateY(30px)';
+                    block.style.transition = 'all 0.6s ease';
+                    
+                    setTimeout(() => {
+                        block.style.opacity = '1';
+                        block.style.transform = 'translateY(0)';
+                    }, index * 200);
+                });
+            }, 500);
+
+            // הוספת אפקט hover לכרטיסי התובנות
+            document.querySelectorAll('.insight-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                    this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.1)';
+                });
+            });
+        });
+
+        // הוספת אפקט להדגשת שיפורים
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.querySelectorAll('.improvement-up').forEach(element => {
+                    element.style.animation = 'pulse 2s infinite';
+                });
+            }, 2000);
+        });
+
+        // CSS לאנימציה
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.02); }
+                100% { transform: scale(1); }
+            }
+            
+            .insight-card {
+                transition: all 0.3s ease;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
